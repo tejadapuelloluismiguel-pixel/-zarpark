@@ -1,0 +1,14 @@
+name: Prueba conexión IDEZar
+
+on:
+  workflow_dispatch:
+
+jobs:
+  prueba:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Probar conexión
+        run: |
+          curl -4 -I --connect-timeout 20 --max-time 30 \
+            "https://idezar-sig.zaragoza.es/"
