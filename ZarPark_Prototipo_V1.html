@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ZarPark — Prototipo V1</title>
+<style>
+:root{--bg:#f5f7fb;--ink:#142033;--muted:#718096;--blue:#1769ff;--green:#19a974;--yellow:#e5a400;--red:#df4b4b;--card:#fff}
+*{box-sizing:border-box}body{margin:0;background:#111827;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:var(--ink)}
+.phone{max-width:430px;min-height:100vh;margin:auto;background:var(--bg);overflow:hidden;position:relative}
+.screen{display:none;min-height:100vh;padding:24px 20px 100px}.screen.active{display:block}
+h1{font-size:31px;margin:8px 0 7px;letter-spacing:-1px}.sub{color:var(--muted);margin:0 0 25px}
+.logo{font-weight:800;color:var(--blue);font-size:21px;margin-top:10px}
+.search{background:#fff;border-radius:17px;padding:17px;box-shadow:0 8px 25px #17203312;display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.search input{border:0;outline:0;font-size:16px;width:100%;background:transparent}.pin{color:var(--blue)}
+.btn{border:0;border-radius:15px;padding:15px 18px;font-size:16px;font-weight:700;width:100%;background:var(--blue);color:white}.btn.secondary{background:#eaf0ff;color:var(--blue);margin-top:10px}
+.map{height:430px;border-radius:24px;background:
+linear-gradient(35deg,transparent 46%,#fff 47%,#fff 49%,transparent 50%),
+linear-gradient(120deg,transparent 45%,#fff 46%,#fff 48%,transparent 49%),
+#dfe8dd;position:relative;overflow:hidden}
+.road{position:absolute;background:#fff;border-radius:5px;transform:rotate(-18deg)}.r1{width:130%;height:24px;top:170px;left:-30px}.r2{width:120%;height:18px;top:280px;left:-10px;transform:rotate(13deg)}.r3{width:18px;height:120%;top:-30px;left:235px;transform:rotate(9deg)}
+.zone{position:absolute;padding:8px 11px;border-radius:20px;color:white;font-weight:800;font-size:13px;box-shadow:0 5px 15px #0002}.g{background:var(--green)}.y{background:var(--yellow)}.r{background:var(--red)}
+.z1{left:30px;top:115px}.z2{right:30px;top:205px}.z3{left:110px;bottom:65px}.z4{right:35px;bottom:100px}
+.bottom{position:absolute;left:0;right:0;bottom:0;background:#fff;padding:14px 20px 22px;border-radius:25px 25px 0 0;box-shadow:0 -8px 25px #0001}
+.row{display:flex;justify-content:space-between;align-items:center}.score{font-size:25px;font-weight:900}.small{font-size:13px;color:var(--muted)}
+.card{background:var(--card);border-radius:20px;padding:18px;margin:12px 0;box-shadow:0 8px 25px #1720330d}.card h3{margin:0 0 6px}.tag{display:inline-block;padding:6px 9px;border-radius:10px;font-size:12px;font-weight:800}.green{background:#e6f8f0;color:#11845a}.yellow{background:#fff5d8;color:#9a7100}.red{background:#ffe8e8;color:#b73535}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);background:#fff;display:flex;justify-content:space-around;padding:11px 10px 18px;border-top:1px solid #e7ebf2;z-index:5}.nav button{border:0;background:none;color:#7b8799;font-weight:700}.nav button.active{color:var(--blue)}
+.back{border:0;background:none;font-size:16px;color:var(--blue);padding:0;margin-bottom:12px;font-weight:700}
+.plan{border:2px solid #dfe6f3}.plan.plus{border-color:#1769ff}.price{font-size:28px;font-weight:900;margin:7px 0}.feature{padding:7px 0;color:#536174}
+</style>
+</head>
+<body>
+<div class="phone">
+<section id="home" class="screen active">
+<div class="logo">ZarPark</div>
+<h1>Encuentra. Aparca. Disfruta.</h1>
+<p class="sub">Te ayudamos a encontrar la zona con mayor probabilidad de aparcamiento.</p>
+<div class="search"><span class="pin">⌕</span><input placeholder="¿Dónde quieres aparcar?" onclick="show('map')"></div>
+<button class="btn secondary" onclick="show('map')">📍 Usar mi ubicación</button>
+<div class="card"><div class="small">PRUEBA EN ZARAGOZA</div><h3>Predicción inteligente</h3><p class="small">Combina ocupación, tendencia, distancia y tiempo estimado de llegada.</p></div>
+<div class="card"><div class="row"><div><b>Zona recomendada</b><br><span class="small">A 5 min de tu destino</span></div><span class="score" style="color:var(--green)">87</span></div></div>
+</section>
+
+<section id="map" class="screen">
+<button class="back" onclick="show('home')">‹ Volver</button>
+<div class="row"><div><b>Destino</b><br><span class="small">Zona Delicias · Zaragoza</span></div><span class="tag green">Actualizado</span></div>
+<div class="map" style="margin-top:14px">
+<div class="road r1"></div><div class="road r2"></div><div class="road r3"></div>
+<div class="zone g z1">87</div><div class="zone g z2">78</div><div class="zone y z3">61</div><div class="zone r z4">29</div>
+</div>
+<div class="bottom">
+<div class="row"><div><b>Zona recomendada</b><div class="small">Alta probabilidad · 450 m</div></div><div class="score" style="color:var(--green)">87/100</div></div>
+<button class="btn" style="margin-top:10px" onclick="show('detail')">Ver detalles</button>
+</div>
+</section>
+
+<section id="detail" class="screen">
+<button class="back" onclick="show('map')">‹ Mapa</button>
+<div class="tag green">ALTA PROBABILIDAD</div><h1>87/100</h1><p class="sub">Zona recomendada por ZarPark</p>
+<div class="card"><div class="row"><b>Ocupación actual</b><b>38%</b></div><div class="row" style="margin-top:12px"><span class="small">Tendencia</span><span class="green tag">Favorable ↗</span></div><div class="row" style="margin-top:12px"><span class="small">Distancia al destino</span><b>450 m</b></div><div class="row" style="margin-top:12px"><span class="small">Llegada estimada</span><b>6 min</b></div></div>
+<div class="card"><h3>¿Por qué esta zona?</h3><p class="small">La puntuación combina ocupación actual, comportamiento histórico, tendencia y distancia. La puntuación es una estimación, no una garantía de plaza.</p></div>
+<button class="btn">🧭 Ir hasta aquí</button>
+</section>
+
+<section id="plans" class="screen">
+<h1>Planes</h1><p class="sub">Empieza gratis y mejora cuando necesites más.</p>
+<div class="card plan"><div class="tag green">GRATIS</div><div class="price">0 €</div><div class="feature">✓ Mapa de aparcamiento</div><div class="feature">✓ Disponibilidad básica</div></div>
+<div class="card plan plus"><div class="tag" style="background:#eaf0ff;color:#1769ff">PLUS</div><div class="price">Por definir</div><div class="feature">✓ Predicción de disponibilidad</div><div class="feature">✓ Alertas inteligentes</div><div class="feature">✓ Navegación a la zona recomendada</div></div>
+<div class="card plan"><div class="tag" style="background:#f0eaff;color:#7048c8">PREMIUM</div><div class="price">Por definir</div><div class="feature">✓ Predicción avanzada</div><div class="feature">✓ Preferencias personalizadas</div><div class="feature">✓ Funciones exclusivas</div></div>
+</section>
+
+<section id="profile" class="screen">
+<h1>Mi ZarPark</h1><p class="sub">Tu perfil y preferencias.</p>
+<div class="card"><h3>Vehículo</h3><p class="small">Añade tu vehículo para personalizar las recomendaciones.</p><button class="btn secondary">+ Añadir vehículo</button></div>
+<div class="card"><h3>Preferencias</h3><p class="small">Distancia máxima · tipo de zona · accesibilidad · alertas</p></div>
+</section>
+
+<nav class="nav">
+<button onclick="show('home')" id="n-home">⌂<br><span>Inicio</span></button>
+<button onclick="show('map')" id="n-map">⌖<br><span>Mapa</span></button>
+<button onclick="show('plans')" id="n-plans">★<br><span>Planes</span></button>
+<button onclick="show('profile')" id="n-profile">●<br><span>Perfil</span></button>
+</nav>
+</div>
+<script>
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));let b=document.getElementById('n-'+id);if(b)b.classList.add('active');window.scrollTo(0,0)}
+</script>
+</body>
+</html>
