@@ -16,9 +16,29 @@ jobs:
       - name: Descargar datos oficiales
         run: |
           mkdir -p data
-          curl -L --fail --silent --show-error \
-            "https://www.zaragoza.es/trafico/estacionamientoots/Occupation.json" \
-            -o data/occupation.json
+          for i in 1 2 3 4 5; do
+            echo "Intento $i de 5..."
+
+            if curl -4 -L \
+              --fail \
+              --silent \
+              --show-error \
+              --connect-timeout 20 \
+              --max-time 60 \
+              --retry 2 \
+              "https://www.zaragoza.es/trafico/estacionamientoots/Occupation.json" \
+              -o data/occupation.json; then
+
+              echo "Datos descargados correctamente"
+              break
+            fi
+
+            echo "No se pudo conectar. Esperando 10 segundos..."
+            sleep 10
+          done
+
+          test -s data/occupation.json
+          
 
       - name: Preparar datos
         run: |
