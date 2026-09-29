@@ -1,0 +1,18 @@
+{
+  "source": "Ayuntamiento de Zaragoza",
+  "occupation": [
+    {"id": 1, "value": 29.4},
+    {"id": 2, "value": 35.5},
+    {"id": 3, "value": 27.9},
+    {"id": 4, "value": 16.4},
+    {"id": 5, "value": 14.4},
+    {"id": 6, "value": 22.7},
+    {"id": 7, "value": 26.3},
+    {"id": 8, "value": 23.0},
+    {"id": 9, "value": 33.4},
+    {"id": 10, "value": 19.0},
+    {"id": 11, "value": 32.4},
+    {"id": 12, "value": 26.6},
+    {"id": 13, "value": 51.4}
+  ]
+}
