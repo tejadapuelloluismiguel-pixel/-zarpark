@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ZarPark — Recomendación inteligente Zaragoza</title>
+<style>
+:root{--bg:#f5f7fb;--ink:#142033;--muted:#718096;--blue:#1769ff;--green:#19a974;--yellow:#e5a400;--red:#df4b4b;--card:#fff}
+*{box-sizing:border-box}body{margin:0;background:#111827;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:var(--ink)}
+.phone{max-width:430px;min-height:100vh;margin:auto;background:var(--bg);overflow:hidden;position:relative}
+.screen{display:none;min-height:100vh;padding:24px 20px 100px}.screen.active{display:block}
+h1{font-size:31px;margin:8px 0 7px;letter-spacing:-1px}.sub{color:var(--muted);margin:0 0 25px}
+.logo{font-weight:800;color:var(--blue);font-size:21px;margin-top:10px}
+.search{background:#fff;border-radius:17px;padding:17px;box-shadow:0 8px 25px #17203312;display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.search input{border:0;outline:0;font-size:16px;width:100%;background:transparent}.pin{color:var(--blue)}
+.btn{border:0;border-radius:15px;padding:15px 18px;font-size:16px;font-weight:700;width:100%;background:var(--blue);color:white}.btn.secondary{background:#eaf0ff;color:var(--blue);margin-top:10px}
+.map{height:430px;border-radius:24px;background:
+linear-gradient(35deg,transparent 46%,#fff 47%,#fff 49%,transparent 50%),
+linear-gradient(120deg,transparent 45%,#fff 46%,#fff 48%,transparent 49%),
+#dfe8dd;position:relative;overflow:hidden}
+.road{position:absolute;background:#fff;border-radius:5px;transform:rotate(-18deg)}.r1{width:130%;height:24px;top:170px;left:-30px}.r2{width:120%;height:18px;top:280px;left:-10px;transform:rotate(13deg)}.r3{width:18px;height:120%;top:-30px;left:235px;transform:rotate(9deg)}
+.zone{position:absolute;padding:8px 11px;border-radius:20px;color:white;font-weight:800;font-size:13px;box-shadow:0 5px 15px #0002}.g{background:var(--green)}.y{background:var(--yellow)}.r{background:var(--red)}
+.z1{left:30px;top:115px}.z2{right:30px;top:205px}.z3{left:110px;bottom:65px}.z4{right:35px;bottom:100px}
+.bottom{position:absolute;left:0;right:0;bottom:0;background:#fff;padding:14px 20px 22px;border-radius:25px 25px 0 0;box-shadow:0 -8px 25px #0001}
+.row{display:flex;justify-content:space-between;align-items:center}.score{font-size:25px;font-weight:900}.small{font-size:13px;color:var(--muted)}
+.card{background:var(--card);border-radius:20px;padding:18px;margin:12px 0;box-shadow:0 8px 25px #1720330d}.card h3{margin:0 0 6px}.tag{display:inline-block;padding:6px 9px;border-radius:10px;font-size:12px;font-weight:800}.green{background:#e6f8f0;color:#11845a}.yellow{background:#fff5d8;color:#9a7100}.red{background:#ffe8e8;color:#b73535}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);background:#fff;display:flex;justify-content:space-around;padding:11px 10px 18px;border-top:1px solid #e7ebf2;z-index:5}.nav button{border:0;background:none;color:#7b8799;font-weight:700}.nav button.active{color:var(--blue)}
+.back{border:0;background:none;font-size:16px;color:var(--blue);padding:0;margin-bottom:12px;font-weight:700}
+.plan{border:2px solid #dfe6f3}.plan.plus{border-color:#1769ff}.price{font-size:28px;font-weight:900;margin:7px 0}.feature{padding:7px 0;color:#536174}
+</style>
+</head>
+<body>
+<div class="phone">
+<section id="home" class="screen active">
+<div class="logo">ZarPark</div>
+<h1>Encuentra. Aparca. Disfruta.</h1>
+<p class="sub">Te ayudamos a encontrar la zona con mayor probabilidad de aparcamiento.</p>
+<div class="search">
+  <span class="pin">⌕</span>
+  <input id="destinationInput" placeholder="¿Dónde quieres aparcar?" autocomplete="off"
+         onkeydown="if(event.key==='Enter'){searchDestination()}" />
+  <button class="btn" style="padding:10px 14px" onclick="searchDestination()">Buscar</button>
+</div>
+<div id="destinationResults" style="display:none;margin-top:-6px;margin-bottom:14px"></div>
+<div id="destinationStatus" class="small" style="margin:0 4px 14px;color:var(--muted)"></div>
+<button class="btn secondary" onclick="useLocation()">📍 Usar mi ubicación</button>
+<div class="card"><div class="small">DATOS REALES · ZARAGOZA</div><h3>Ocupación en directo</h3><p class="small">ZarPark consulta los datos públicos del Ayuntamiento en directo mediante su conexión segura de datos.</p><div id="status" class="tag yellow">Consultando…</div></div>
+<div class="card"><div class="row"><div><b>Zona recomendada</b><br><span id="recommendedName" class="small">Calculando…</span><br><span id="recommendedDistance" class="small"></span></div><span id="recommendedScore" class="score" style="color:var(--green)">—</span></div></div>
+</section>
+
+<section id="map" class="screen">
+<button class="back" onclick="show('home')">‹ Volver</button>
+<div class="row"><div><b>Zonas reguladas</b><br><span class="small">Zaragoza · ocupación oficial</span></div><span id="mapStatus" class="tag yellow">Consultando…</span></div>
+<div id="zoneMap" class="map" style="margin-top:14px">
+<div class="road r1"></div><div class="road r2"></div><div class="road r3"></div>
+<div class="zone g z1" id="z1">—</div><div class="zone g z2" id="z2">—</div><div class="zone y z3" id="z3">—</div><div class="zone r z4" id="z4">—</div>
+</div>
+<div class="card">
+<div class="row"><b>Ocupación actual</b><b id="currentBest">—</b></div>
+<p id="mapMessage" class="small" style="margin-bottom:0">Cargando datos oficiales…</p>
+</div>
+<div class="bottom">
+<div class="row"><div><b id="bottomName">Zona recomendada</b><div id="bottomText" class="small">Esperando datos oficiales</div></div><div id="bottomScore" class="score" style="color:var(--green)">—</div></div>
+<button class="btn" style="margin-top:10px" onclick="show('detail')">Ver detalles</button>
+</div>
+</section>
+
+<section id="detail" class="screen">
+<button class="back" onclick="show('map')">‹ Mapa</button>
+<div id="detailTag" class="tag green">DATOS OFICIALES</div><h1 id="detailScore">—</h1><p id="detailName" class="sub">Zona recomendada por ZarPark</p>
+<div class="card"><div class="row"><b>Ocupación actual</b><b id="detailOccupation">—</b></div><div class="row" style="margin-top:12px"><span class="small">Distancia</span><b id="detailDistance">—</b></div><div class="row" style="margin-top:12px"><span class="small">Estado</span><span id="detailState" class="green tag">Calculando…</span></div><div class="row" style="margin-top:12px"><span class="small">Fuente</span><b>Ayuntamiento</b></div></div>
+<div class="card"><h3>¿Por qué esta zona?</h3><p id="whyRecommendation" class="small">ZarPark combina la ocupación oficial actual con la distancia desde tu ubicación. La puntuación es experimental y no garantiza una plaza libre.</p></div>
+<button class="btn" onclick="show('map')">🧭 Volver al mapa</button>
+</section>
+
+<section id="plans" class="screen">
+<h1>Planes</h1><p class="sub">Empieza gratis y mejora cuando necesites más.</p>
+<div class="card plan"><div class="tag green">GRATIS</div><div class="price">0 €</div><div class="feature">✓ Mapa de aparcamiento</div><div class="feature">✓ Disponibilidad básica</div></div>
+<div class="card plan plus"><div class="tag" style="background:#eaf0ff;color:#1769ff">PLUS</div><div class="price">Por definir</div><div class="feature">✓ Predicción de disponibilidad</div><div class="feature">✓ Alertas inteligentes</div><div class="feature">✓ Navegación a la zona recomendada</div></div>
+<div class="card plan"><div class="tag" style="background:#f0eaff;color:#7048c8">PREMIUM</div><div class="price">Por definir</div><div class="feature">✓ Predicción avanzada</div><div class="feature">✓ Preferencias personalizadas</div><div class="feature">✓ Funciones exclusivas</div></div>
+</section>
+
+<section id="profile" class="screen">
+<h1>Mi ZarPark</h1><p class="sub">Tu perfil y preferencias.</p>
+<div class="card"><h3>Vehículo</h3><p class="small">Añade tu vehículo para personalizar las recomendaciones.</p><button class="btn secondary">+ Añadir vehículo</button></div>
+<div class="card"><h3>Preferencias</h3><p class="small">Distancia máxima · tipo de zona · accesibilidad · alertas</p></div>
+</section>
+
+<nav class="nav">
+<button onclick="show('home')" id="n-home">⌂<br><span>Inicio</span></button>
+<button onclick="show('map')" id="n-map">⌖<br><span>Mapa</span></button>
+<button onclick="show('plans')" id="n-plans">★<br><span>Planes</span></button>
+<button onclick="show('profile')" id="n-profile">●<br><span>Perfil</span></button>
+</nav>
+</div>
+<script>
+const OCCUPATION_API = "https://zarpark-api.tejadapuelloluismiguel.workers.dev/";
+let liveData = [];
+let recommendation = null;
+
+function show(id){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+  const b=document.getElementById('n-'+id);
+  if(b)b.classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='map' && !liveData.length) loadOccupation();
+}
+
+function scoreFromOccupation(value){
+  return Math.max(0, Math.min(100, Math.round(100 - value)));
+}
+
+function stateFor(value){
+  if(value <= 35) return ["ALTA PROBABILIDAD","green"];
+  if(value <= 65) return ["PROBABILIDAD MEDIA","yellow"];
+  return ["BAJA PROBABILIDAD","red"];
+}
+
+function paintData(){
+  if(!liveData.length) return;
+
+  const fallback=[...liveData].sort((a,b)=>a.value-b.value)[0];
+  const best=recommendation || fallback;
+  const score=Number.isFinite(best.score) ? best.score : scoreFromOccupation(best.value);
+  const state=stateFor(best.value);
+
+  document.getElementById('status').textContent='Actualizado con datos oficiales';
+  document.getElementById('status').className='tag green';
+  document.getElementById('recommendedName').textContent=
+    `Zona ${best.id} · ${best.value.toFixed(1)}% ocupación`;
+  document.getElementById('recommendedScore').textContent=score;
+  const hasDestination=!!localStorage.getItem("zarpark_destination_name");
+  document.getElementById('recommendedDistance').textContent=
+    Number.isFinite(best.distanceKm)
+      ? (hasDestination
+        ? `A ${best.distanceKm.toFixed(2)} km del destino`
+        : `A ${best.distanceKm.toFixed(2)} km de tu ubicación`)
+      : 'Ordenada por ocupación';
+
+  document.getElementById('mapStatus').textContent='Actualizado';
+  document.getElementById('mapStatus').className='tag green';
+  document.getElementById('currentBest').textContent=
+    `Zona ${best.id} · ${best.value.toFixed(1)}%`;
+
+  const destinationName=localStorage.getItem("zarpark_destination_name");
+  document.getElementById('mapMessage').textContent =
+    Number.isFinite(best.distanceKm)
+      ? (destinationName
+        ? `Cerca de ${destinationName.split(',').slice(0,3).join(', ')}: Zona ${best.id}, a ${best.distanceKm.toFixed(2)} km.`
+        : `Recomendación personalizada: Zona ${best.id}, a ${best.distanceKm.toFixed(2)} km.`)
+      : `Sin ubicación/destino: se muestra la zona con menor ocupación actual, Zona ${best.id}.`;
+
+  [1,2,3,4].forEach((id,i)=>{
+    const z=liveData.find(x=>x.id===id);
+    const el=document.getElementById('z'+(i+1));
+    if(z){
+      el.textContent=`Z${z.id} · ${Math.round(z.value)}%`;
+      el.className='zone '+(z.value<=35?'g':z.value<=65?'y':'r')+' z'+(i+1);
+    } else {
+      el.textContent='—';
+    }
+  });
+
+  document.getElementById('bottomName').textContent=`Zona ${best.id}`;
+  const destinationName2=localStorage.getItem("zarpark_destination_name");
+  document.getElementById('bottomText').textContent =
+    Number.isFinite(best.distanceKm)
+      ? `${best.value.toFixed(1)}% ocupación · ${best.distanceKm.toFixed(2)} km · ${destinationName2 ? 'cerca del destino' : 'recomendación personalizada'}`
+      : `${best.value.toFixed(1)}% de ocupación · menor ocupación actual`;
+  document.getElementById('bottomScore').textContent=score+'/100';
+
+  document.getElementById('detailTag').textContent=state[0];
+  document.getElementById('detailTag').className='tag '+state[1];
+  document.getElementById('detailScore').textContent=score+'/100';
+  document.getElementById('detailName').textContent=`Zona ${best.id} recomendada por ZarPark`;
+  document.getElementById('detailOccupation').textContent=best.value.toFixed(1)+'%';
+  document.getElementById('detailDistance').textContent =
+    Number.isFinite(best.distanceKm) ? `${best.distanceKm.toFixed(2)} km` : 'No disponible';
+  document.getElementById('detailState').textContent=state[0];
+  document.getElementById('detailState').className='tag '+state[1];
+
+  document.getElementById('whyRecommendation').textContent =
+    Number.isFinite(best.distanceKm)
+      ? 'Esta recomendación combina 60% de disponibilidad y 40% de proximidad al punto seleccionado. La puntuación es experimental y no garantiza una plaza libre.'
+      : 'Activa tu ubicación para obtener una recomendación personalizada. Mientras tanto, se usa la zona con menor ocupación actual.';
+}
+
+async function searchDestination(){
+  const input=document.getElementById('destinationInput');
+  const results=document.getElementById('destinationResults');
+  const status=document.getElementById('destinationStatus');
+  const q=input.value.trim();
+
+  if(q.length<3){
+    status.textContent='Escribe una dirección o lugar de Zaragoza.';
+    results.style.display='none';
+    return;
+  }
+
+  status.textContent='Buscando dirección…';
+  results.style.display='none';
+
+  try{
+    const url='https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&countrycodes=es&bounded=1&viewbox=-1.05,41.75,-0.75,41.55&q='+
+      encodeURIComponent(q+', Zaragoza, España');
+
+    const response=await fetch(url,{
+      headers:{'Accept':'application/json'}
+    });
+
+    if(!response.ok) throw new Error('HTTP '+response.status);
+
+    const places=await response.json();
+
+    if(!places.length){
+      status.textContent='No encontré esa dirección. Prueba con calle y número.';
+      return;
+    }
+
+    results.innerHTML=places.map((p,i)=>`
+      <button type="button" class="card" style="width:100%;text-align:left;margin-bottom:8px;cursor:pointer"
+        onclick="selectDestination(${i})">
+        <b>${escapeHtml(p.display_name.split(',').slice(0,3).join(', '))}</b>
+        <div class="small">${escapeHtml(p.display_name)}</div>
+      </button>
+    `).join('');
+
+    window.zarparkSearchResults=places;
+    results.style.display='block';
+    status.textContent='Selecciona tu destino:';
+  }catch(error){
+    status.textContent='No se pudo buscar la dirección. Inténtalo de nuevo.';
+  }
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g,m=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[m]));
+}
+
+function selectDestination(index){
+  const p=(window.zarparkSearchResults||[])[index];
+  if(!p) return;
+
+  const lat=Number(p.lat);
+  const lon=Number(p.lon);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)) return;
+
+  localStorage.setItem("zarpark_destination_lat",String(lat));
+  localStorage.setItem("zarpark_destination_lon",String(lon));
+  localStorage.setItem("zarpark_destination_name",p.display_name);
+
+  document.getElementById('destinationInput').value=p.display_name.split(',').slice(0,3).join(', ');
+  document.getElementById('destinationResults').style.display='none';
+  document.getElementById('destinationStatus').textContent='Destino seleccionado';
+
+  show('map');
+  loadOccupation(lat,lon,'destination');
+}
+
+function useLocation(){
+  if(!navigator.geolocation){
+    alert("Este navegador no permite obtener la ubicación.");
+    return;
+  }
+
+  document.getElementById('status').textContent='Obteniendo tu ubicación…';
+  document.getElementById('status').className='tag yellow';
+
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      const lat=Number(pos.coords.latitude.toFixed(5));
+      const lon=Number(pos.coords.longitude.toFixed(5));
+
+      localStorage.setItem("zarpark_lat",String(lat));
+      localStorage.setItem("zarpark_lon",String(lon));
+      localStorage.removeItem("zarpark_destination_lat");
+      localStorage.removeItem("zarpark_destination_lon");
+      localStorage.removeItem("zarpark_destination_name");
+
+      show('map');
+      loadOccupation(lat,lon);
+    },
+    err=>{
+      alert("No se pudo obtener la ubicación. Comprueba que Safari tenga permiso de ubicación para este sitio.");
+      loadOccupation();
+    },
+    {enableHighAccuracy:true,timeout:10000,maximumAge:60000}
+  );
+}
+
+async function loadOccupation(lat=null,lon=null,mode='location'){
+  try{
+    const hasLocation=Number.isFinite(lat)&&Number.isFinite(lon);
+    const apiUrl=hasLocation
+      ? `${OCCUPATION_API}?lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&mode=${encodeURIComponent(mode)}`
+      : OCCUPATION_API;
+
+    const response=await fetch(apiUrl,{cache:'no-store'});
+    if(!response.ok) throw new Error('HTTP '+response.status);
+
+    const json=await response.json();
+
+    liveData=(json.occupation||[])
+      .map(x=>({id:Number(x.id),value:Number(x.value)}))
+      .filter(x=>Number.isFinite(x.id)&&Number.isFinite(x.value));
+
+    recommendation=json.recommendation ? {
+      id:Number(json.recommendation.id),
+      name:json.recommendation.name,
+      value:Number(json.recommendation.occupation),
+      lat:Number(json.recommendation.lat),
+      lon:Number(json.recommendation.lon),
+      distanceKm:Number(json.recommendation.distanceKm),
+      score:Number(json.recommendation.score)
+    } : null;
+
+    if(!liveData.length) throw new Error('Sin datos');
+
+    paintData();
+  }catch(error){
+    recommendation=null;
+    liveData=[
+      {id:1,value:29.4},{id:2,value:35.5},{id:3,value:27.9},{id:4,value:16.4},
+      {id:5,value:14.4},{id:6,value:22.7},{id:7,value:26.3},{id:8,value:23.0},
+      {id:9,value:33.4},{id:10,value:19.0},{id:11,value:32.4},{id:12,value:26.6},
+      {id:13,value:51.4}
+    ];
+    paintData();
+    document.getElementById('status').textContent='Datos de respaldo · conexión en revisión';
+    document.getElementById('status').className='tag yellow';
+    document.getElementById('mapMessage').textContent=
+      'No se pudo consultar el servicio en directo; se muestran temporalmente los últimos datos verificados.';
+  }
+}
+
+const savedDestLat=Number(localStorage.getItem("zarpark_destination_lat"));
+const savedDestLon=Number(localStorage.getItem("zarpark_destination_lon"));
+if(Number.isFinite(savedDestLat)&&Number.isFinite(savedDestLon)){
+  const savedName=localStorage.getItem("zarpark_destination_name");
+  const input=document.getElementById('destinationInput');
+  if(input&&savedName) input.value=savedName.split(',').slice(0,3).join(', ');
+  loadOccupation(savedDestLat,savedDestLon,'destination');
+}else{
+  loadOccupation();
+}
+setInterval(()=>loadOccupation(),120000);
+</script>
+</body>
+</html>
